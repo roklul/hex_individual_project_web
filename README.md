@@ -2,7 +2,7 @@
 
 **Vite + Vue 3 (Composition API, `<script setup>`) + Pinia + Vue Router + Tailwind CSS v4 + Axios**
 
-- **線上網站**：`https://<your-web>.vercel.app`（部署後填入）
+- **線上網站**：`https://sale.lifemochi.com`（部署後填入）
 - **後端 API**：`https://<your-api>.onrender.com/api`
 - **後端 Repo**：`https://github.com/roklul/hex_individual_project`
 
@@ -52,8 +52,9 @@ cp .env.example .env.local   # 設定 VITE_API_BASE_URL
 npm run dev
 ```
 
-## 部署（Vercel）
+## 部署（Cloudflare Pages → https://sale.lifemochi.com）
 
-1. 匯入此 Repo，Framework 選 Vite。
-2. 環境變數：`VITE_API_BASE_URL=https://<your-api>.onrender.com/api`
-3. `vercel.json` 已設定 SPA rewrite（Netlify 則使用 `public/_redirects`）。
+1. Cloudflare → Workers & Pages → Pages → Connect to Git，選此 Repo；Build command `npm run build`、輸出目錄 `dist`。
+2. 環境變數：`VITE_API_BASE_URL=https://<your-api>.onrender.com/api`、`NODE_VERSION=22`。
+3. Custom domains 加上 `sale.lifemochi.com`。
+4. SPA rewrite 由 `public/_redirects` 處理（另附 `vercel.json` 供 Vercel 使用）。
