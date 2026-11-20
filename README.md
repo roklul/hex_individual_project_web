@@ -4,7 +4,7 @@
 
 - **線上網站**：`https://<your-web>.vercel.app`（部署後填入）
 - **後端 API**：`https://<your-api>.onrender.com/api`
-- **後端 Repo**：`https://github.com/<you>/hex_individual_project`
+- **後端 Repo**：`https://github.com/roklul/hex_individual_project`
 
 所有資料皆來自自行開發的後端 API，未使用任何假資料或 JSON Server。
 
