@@ -1,25 +1,30 @@
 import axios from 'axios'
-
-export const TOKEN_KEY = 'emma_token'
+import { requireSession, session } from './session.js'
 
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env?.VITE_API_BASE_URL,
   timeout: 20000, // 免費雲端主機冷啟動較慢
 })
 
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY)
+  config.sessionVersion ??= session.value.version
+  requireSession(config.sessionVersion)
+  const { token } = session.value
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
-})
+}, undefined, { synchronous: true })
 
 // 401 處理由外部註冊，避免 http <-> store/router 循環依賴
 let onUnauthorized = null
 export const setUnauthorizedHandler = (fn) => (onUnauthorized = fn)
 
 http.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    requireSession(res.config.sessionVersion)
+    return res
+  },
   (error) => {
+    if (error.config) requireSession(error.config.sessionVersion)
     const status = error.response?.status
     const url = error.config?.url || ''
     if (status === 401 && !url.startsWith('/auth/login') && !url.startsWith('/auth/register')) {

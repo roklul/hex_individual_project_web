@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { cartApi } from '@/api'
+import { computed, ref, watch } from 'vue'
+import { cartApi } from '../api/index.js'
+import { isCurrentSession, requireSession, session } from '../api/session.js'
 
-const empty = () => ({ items: [], total: 0, totalQuantity: 0, shippingFee: 0, grandTotal: 0, freeShippingThreshold: 500 })
+const empty = () => ({ items: [], total: 0, totalQuantity: 0, shippingFee: 0, grandTotal: 0, freeShippingThreshold: 500, cartVersion: -1, quoteVersion: '' })
 
 /**
  * 購物車狀態一律以後端回傳結果為準：每次加入/修改/移除後，
@@ -13,7 +14,11 @@ export const useCartStore = defineStore('cart', () => {
   const loading = ref(false)
   const loaded = ref(false)
   const error = ref(null)
-  const pending = ref(new Set()) // 正在更新的 productId
+  const pending = ref(new Map()) // 各 productId 尚未完成的更新數
+  const updating = computed(() => pending.value.size > 0)
+  let nextRequest = 0
+  let appliedRequest = 0
+  let latestRead = 0
 
   const items = computed(() => cart.value.items)
   const count = computed(() => cart.value.totalQuantity)
@@ -24,30 +29,54 @@ export const useCartStore = defineStore('cart', () => {
   const freeShippingThreshold = computed(() => cart.value.freeShippingThreshold ?? 500)
   const isPending = (id) => pending.value.has(id)
 
+  function applyCart(data, request) {
+    if (!Number.isSafeInteger(data?.cartVersion) || data.cartVersion < 0 ||
+        typeof data.quoteVersion !== 'string' || !data.quoteVersion) {
+      throw new Error('購物車回應缺少報價版本')
+    }
+    // 同一購物車版本也可能因商品調價取得新報價；此時以請求發起順序決定。
+    if (data.cartVersion < cart.value.cartVersion ||
+        (data.cartVersion === cart.value.cartVersion && request < appliedRequest)) return
+    cart.value = data
+    appliedRequest = request
+    loaded.value = true
+    error.value = null
+  }
+
   async function withPending(id, fn) {
-    pending.value = new Set(pending.value).add(id)
+    const version = session.value.version
+    const request = ++nextRequest
+    pending.value.set(id, (pending.value.get(id) || 0) + 1)
     try {
       const res = await fn()
-      cart.value = res.data
+      requireSession(version)
+      applyCart(res.data, request)
       return res
     } finally {
-      const next = new Set(pending.value)
-      next.delete(id)
-      pending.value = next
+      if (isCurrentSession(version)) {
+        const remaining = pending.value.get(id) - 1
+        if (remaining > 0) pending.value.set(id, remaining)
+        else pending.value.delete(id)
+      }
     }
   }
 
   async function fetchCart() {
+    const version = session.value.version
+    const request = ++nextRequest
+    latestRead = request
     loading.value = true
     error.value = null
     try {
-      cart.value = (await cartApi.get()).data
-      loaded.value = true
+      const res = await cartApi.get()
+      requireSession(version)
+      applyCart(res.data, request)
+      return cart.value
     } catch (err) {
-      error.value = err
+      if (isCurrentSession(version) && request === latestRead && request >= appliedRequest) error.value = err
       throw err
     } finally {
-      loading.value = false
+      if (isCurrentSession(version) && request === latestRead) loading.value = false
     }
   }
 
@@ -58,9 +87,15 @@ export const useCartStore = defineStore('cart', () => {
 
   function reset() {
     cart.value = empty()
+    loading.value = false
     loaded.value = false
     error.value = null
+    pending.value.clear()
+    appliedRequest = 0
+    latestRead = 0
   }
 
-  return { cart, items, count, total, shippingFee, grandTotal, freeShippingThreshold, loading, loaded, error, isPending, fetchCart, addItem, updateItem, removeItem, clearCart, reset }
+  watch(session, reset, { flush: 'sync' })
+
+  return { cart, items, count, total, shippingFee, grandTotal, freeShippingThreshold, loading, loaded, updating, error, isPending, fetchCart, addItem, updateItem, removeItem, clearCart, reset }
 })

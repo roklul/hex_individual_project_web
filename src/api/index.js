@@ -1,4 +1,4 @@
-import http from './http'
+import http from './http.js'
 
 export const authApi = {
   register: (payload) => http.post('/auth/register', payload).then((r) => r.data.data),
@@ -21,7 +21,7 @@ export const cartApi = {
 }
 
 export const orderApi = {
-  create: (payload) => http.post('/orders', payload).then((r) => r.data),
+  create: (payload, sessionVersion) => http.post('/orders', payload, { sessionVersion }).then((r) => r.data),
   list: (params) => http.get('/orders', { params }).then((r) => r.data),
   get: (id) => http.get(`/orders/${id}`).then((r) => r.data.data),
   cancel: (id) => http.post(`/orders/${id}/cancel`).then((r) => r.data),

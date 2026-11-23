@@ -72,7 +72,7 @@ function checkout() {
         </dl>
         <p v-if="cart.shippingFee" class="mt-3 text-xs text-ink/50">再買 {{ currency(cart.freeShippingThreshold - cart.total) }} 即可免運</p>
         <p v-if="hasIssue" class="mt-3 text-xs text-red-700">部分商品庫存不足或已下架，請先調整</p>
-        <button type="button" class="btn-primary mt-6 w-full" :disabled="hasIssue" @click="checkout">前往結帳</button>
+        <button type="button" class="btn-primary mt-6 w-full" :disabled="hasIssue || cart.updating || cart.loading" @click="checkout">前往結帳</button>
         <RouterLink to="/products" class="mt-3 block text-center text-sm text-accent hover:underline">繼續購物</RouterLink>
       </aside>
     </div>

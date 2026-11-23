@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { authApi } from '@/api'
-import { TOKEN_KEY } from '@/api/http'
+import { computed, ref, watch } from 'vue'
+import { authApi } from '../api/index.js'
+import { checkStoredSession, isCurrentSession, saveToken, session } from '../api/session.js'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem(TOKEN_KEY) || '')
+  const token = computed(() => session.value.token)
   const user = ref(null)
   const ready = ref(false)
   let initPromise = null
@@ -12,40 +12,51 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => !!token.value && !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
 
-  function setSession(data) {
-    token.value = data.token
+  watch(session, () => {
+    user.value = null
+    ready.value = !session.value.token
+    initPromise = null
+  }, { flush: 'sync' })
+
+  function setSession(data, version) {
+    saveToken(data.token, version)
     user.value = data.user
-    localStorage.setItem(TOKEN_KEY, data.token)
+    ready.value = true
   }
 
   /** 重新整理頁面時，用保存的 token 向後端換回使用者資料 */
   function init() {
+    checkStoredSession()
     if (initPromise) return initPromise
+    const version = session.value.version
     initPromise = (async () => {
-      if (token.value) {
+      if (token.value && !user.value) {
         try {
-          user.value = await authApi.me()
+          const profile = await authApi.me()
+          if (isCurrentSession(version)) user.value = profile
         } catch (err) {
+          if (!isCurrentSession(version)) return
           // 只有確定 token 無效時才清掉；網路錯誤時保留，下次再試
           if (err.response?.status === 401) clear()
           else initPromise = null
         }
       }
-      ready.value = true
+      if (isCurrentSession(version)) ready.value = true
     })()
     return initPromise
   }
 
   async function login(payload) {
-    setSession(await authApi.login(payload))
+    const version = session.value.version
+    setSession(await authApi.login(payload), version)
   }
   async function register(payload) {
-    setSession(await authApi.register(payload))
+    const version = session.value.version
+    setSession(await authApi.register(payload), version)
   }
   function clear() {
-    token.value = ''
-    user.value = null
-    localStorage.removeItem(TOKEN_KEY)
+    const version = session.value.version
+    if (isCurrentSession(version)) saveToken('', version)
   }
 
   return { token, user, ready, isLoggedIn, isAdmin, init, login, register, logout: clear }
