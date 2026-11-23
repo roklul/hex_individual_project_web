@@ -2,8 +2,8 @@
 
 **Vite + Vue 3 (Composition API, `<script setup>`) + Pinia + Vue Router + Tailwind CSS v4 + Axios**
 
-- **線上網站**：`https://sale.lifemochi.com`（部署後填入）
-- **後端 API**：`https://<your-api>.onrender.com/api`
+- **線上網站**：https://emma-parts.pages.dev
+- **後端 API**：https://emma-parts-api.onrender.com/api
 - **後端 Repo**：`https://github.com/roklul/hex_individual_project`
 
 所有資料皆來自自行開發的後端 API，未使用任何假資料或 JSON Server。
@@ -52,9 +52,9 @@ cp .env.example .env.local   # 設定 VITE_API_BASE_URL
 npm run dev
 ```
 
-## 部署（Cloudflare Pages → https://sale.lifemochi.com）
+## 部署（Cloudflare Pages → https://emma-parts.pages.dev）
 
 1. Cloudflare → Workers & Pages → Pages → Connect to Git，選此 Repo；Build command `npm run build`、輸出目錄 `dist`。
-2. 環境變數：`VITE_API_BASE_URL=https://<your-api>.onrender.com/api`、`NODE_VERSION=22`。
-3. Custom domains 加上 `sale.lifemochi.com`。
-4. SPA rewrite 由 `public/_redirects` 處理（另附 `vercel.json` 供 Vercel 使用）。
+2. 環境變數：`VITE_API_BASE_URL=https://emma-parts-api.onrender.com/api`、`NODE_VERSION=22`（Vite 在 build 時寫入，修改後需重新部署）。
+3. SPA 路由：專案沒有 `404.html`，Cloudflare Pages 會自動以 SPA 模式回傳 `index.html`（另附 `vercel.json` 供 Vercel 使用）。
+4. 商品圖放在 `public/products/`，由 Pages 直接提供。
