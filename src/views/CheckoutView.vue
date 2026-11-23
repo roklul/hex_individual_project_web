@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useToastStore } from '@/stores/toast'
 import { currency } from '@/utils/format'
+import { isValidTwPhone } from '@/utils/phone'
 import CheckoutSteps from '@/components/order/CheckoutSteps.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
@@ -27,7 +28,7 @@ const payments = [
 
 const errors = computed(() => ({
   name: !form.name.trim() ? '請輸入收件人姓名' : '',
-  phone: !/^(09\d{8}|0\d{1,2}-?\d{6,8})$/.test(form.phone.trim()) ? '請輸入有效電話，例如 0912345678' : '',
+  phone: !isValidTwPhone(form.phone) ? '請輸入有效電話：手機 09 開頭 10 碼，或市話如 02-12345678' : '',
   address: form.address.trim().length < 5 ? '請輸入完整的收件地址' : '',
 }))
 const show = (k) => touched[k] && errors.value[k]
