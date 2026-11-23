@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { cartApi } from '@/api'
 
-const empty = () => ({ items: [], total: 0, totalQuantity: 0 })
+const empty = () => ({ items: [], total: 0, totalQuantity: 0, shippingFee: 0, grandTotal: 0, freeShippingThreshold: 500 })
 
 /**
  * 購物車狀態一律以後端回傳結果為準：每次加入/修改/移除後，
@@ -18,6 +18,10 @@ export const useCartStore = defineStore('cart', () => {
   const items = computed(() => cart.value.items)
   const count = computed(() => cart.value.totalQuantity)
   const total = computed(() => cart.value.total)
+  // 運費與總計由後端計算，前端只負責顯示
+  const shippingFee = computed(() => cart.value.shippingFee ?? 0)
+  const grandTotal = computed(() => cart.value.grandTotal ?? cart.value.total)
+  const freeShippingThreshold = computed(() => cart.value.freeShippingThreshold ?? 500)
   const isPending = (id) => pending.value.has(id)
 
   async function withPending(id, fn) {
@@ -58,5 +62,5 @@ export const useCartStore = defineStore('cart', () => {
     error.value = null
   }
 
-  return { cart, items, count, total, loading, loaded, error, isPending, fetchCart, addItem, updateItem, removeItem, clearCart, reset }
+  return { cart, items, count, total, shippingFee, grandTotal, freeShippingThreshold, loading, loaded, error, isPending, fetchCart, addItem, updateItem, removeItem, clearCart, reset }
 })

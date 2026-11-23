@@ -2,7 +2,7 @@
 
 **Vite + Vue 3 (Composition API, `<script setup>`) + Pinia + Vue Router + Tailwind CSS v4 + Axios**
 
-- **線上網站**：https://emma-parts.pages.dev
+- **線上網站**：https://sale.lifemochi.com（備用：https://emma-parts.pages.dev）
 - **後端 API**：https://emma-parts-api.onrender.com/api
 - **後端 Repo**：`https://github.com/roklul/hex_individual_project`
 
@@ -17,6 +17,9 @@
 | `/products/:id` | 商品內容 | 圖片切換、數量選擇、庫存提示 |
 | `/login`、`/register` | 登入 / 註冊 | 即時欄位驗證，登入後導回原頁 |
 | `/cart` | 購物車 | 需登入；增減數量、移除、清空、小計與運費 |
+| `/checkout` | 結帳 | 需登入；收件資料、付款方式（貨到付款／ATM 轉帳）、欄位即時驗證 |
+| `/orders` | 我的訂單 | 需登入；訂單列表、狀態標籤、分頁 |
+| `/orders/:id` | 訂單明細 | 需登入；下單完成提示、明細、取消訂單 |
 
 ## 狀態管理重點
 

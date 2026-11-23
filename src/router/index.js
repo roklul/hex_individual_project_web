@@ -11,6 +11,9 @@ const router = createRouter({
     { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue'), meta: { title: '登入', guestOnly: true } },
     { path: '/register', name: 'register', component: () => import('@/views/RegisterView.vue'), meta: { title: '註冊', guestOnly: true } },
     { path: '/cart', name: 'cart', component: () => import('@/views/CartView.vue'), meta: { title: '購物車', requiresAuth: true } },
+    { path: '/checkout', name: 'checkout', component: () => import('@/views/CheckoutView.vue'), meta: { title: '結帳', requiresAuth: true } },
+    { path: '/orders', name: 'orders', component: () => import('@/views/OrdersView.vue'), meta: { title: '我的訂單', requiresAuth: true } },
+    { path: '/orders/:id', name: 'order', component: () => import('@/views/OrderDetailView.vue'), meta: { title: '訂單明細', requiresAuth: true } },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue'), meta: { title: '找不到頁面' } },
   ],
   scrollBehavior(to, from, saved) {

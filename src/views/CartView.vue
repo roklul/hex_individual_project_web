@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useToastStore } from '@/stores/toast'
 import { getErrorMessage } from '@/api/http'
@@ -10,10 +11,10 @@ import StatusMessage from '@/components/common/StatusMessage.vue'
 
 const cart = useCartStore()
 const toast = useToastStore()
+const router = useRouter()
 
 onMounted(() => cart.fetchCart().catch(() => {}))
 
-const shipping = computed(() => (cart.total >= 500 || cart.total === 0 ? 0 : 60))
 const hasIssue = computed(() => cart.items.some((i) => !i.available || i.quantity > i.maxQuantity))
 
 async function run(fn, success) {
@@ -33,7 +34,7 @@ function clearAll() {
   if (confirm('確定要清空購物車嗎？')) run(() => cart.clearCart())
 }
 function checkout() {
-  toast.info('結帳功能尚在開發中，感謝你的耐心！')
+  router.push({ name: 'checkout' })
 }
 </script>
 
@@ -66,10 +67,10 @@ function checkout() {
         <h2 id="summary-title" class="font-medium">訂單摘要</h2>
         <dl class="mt-4 space-y-2 text-sm">
           <div class="flex justify-between"><dt class="text-ink/60">商品小計</dt><dd>{{ currency(cart.total) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-ink/60">運費</dt><dd>{{ shipping ? currency(shipping) : '免運' }}</dd></div>
-          <div class="flex justify-between border-t border-sand pt-3 text-base font-medium"><dt>總計</dt><dd class="text-accent">{{ currency(cart.total + shipping) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-ink/60">運費</dt><dd>{{ cart.shippingFee ? currency(cart.shippingFee) : '免運' }}</dd></div>
+          <div class="flex justify-between border-t border-sand pt-3 text-base font-medium"><dt>總計</dt><dd class="text-accent">{{ currency(cart.grandTotal) }}</dd></div>
         </dl>
-        <p v-if="shipping" class="mt-3 text-xs text-ink/50">再買 {{ currency(500 - cart.total) }} 即可免運</p>
+        <p v-if="cart.shippingFee" class="mt-3 text-xs text-ink/50">再買 {{ currency(cart.freeShippingThreshold - cart.total) }} 即可免運</p>
         <p v-if="hasIssue" class="mt-3 text-xs text-red-700">部分商品庫存不足或已下架，請先調整</p>
         <button type="button" class="btn-primary mt-6 w-full" :disabled="hasIssue" @click="checkout">前往結帳</button>
         <RouterLink to="/products" class="mt-3 block text-center text-sm text-accent hover:underline">繼續購物</RouterLink>
