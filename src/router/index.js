@@ -14,6 +14,16 @@ const router = createRouter({
     { path: '/checkout', name: 'checkout', component: () => import('@/views/CheckoutView.vue'), meta: { title: '結帳', requiresAuth: true } },
     { path: '/orders', name: 'orders', component: () => import('@/views/OrdersView.vue'), meta: { title: '我的訂單', requiresAuth: true } },
     { path: '/orders/:id', name: 'order', component: () => import('@/views/OrderDetailView.vue'), meta: { title: '訂單明細', requiresAuth: true } },
+    {
+      path: '/admin',
+      component: () => import('@/views/admin/AdminLayout.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        { path: '', redirect: { name: 'admin-products' } },
+        { path: 'products', name: 'admin-products', component: () => import('@/views/admin/AdminProductsView.vue'), meta: { title: '商品管理' } },
+        { path: 'orders', name: 'admin-orders', component: () => import('@/views/admin/AdminOrdersView.vue'), meta: { title: '訂單管理' } },
+      ],
+    },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue'), meta: { title: '找不到頁面' } },
   ],
   scrollBehavior(to, from, saved) {
@@ -29,6 +39,8 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
+  // 非管理員進入後台一律回首頁；真正的權限仍由後端 API 檢查
+  if (to.meta.requiresAdmin && !auth.isAdmin) return { name: 'home' }
   if (to.meta.guestOnly && auth.isLoggedIn) return { name: 'home' }
 })
 

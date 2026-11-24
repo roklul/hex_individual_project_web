@@ -22,7 +22,7 @@ const links = [
 function logout() {
   auth.logout()
   toast.success('已登出，期待再次見到你')
-  if (route.meta.requiresAuth) router.push({ name: 'home' })
+  if (route.matched.some((r) => r.meta.requiresAuth)) router.push({ name: 'home' })
 }
 </script>
 
@@ -44,6 +44,7 @@ function logout() {
 
       <div class="flex items-center gap-1 sm:gap-2">
         <template v-if="auth.isLoggedIn">
+          <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-products' }" class="btn-ghost hidden px-3 text-accent md:inline-flex">後台管理</RouterLink>
           <RouterLink :to="{ name: 'orders' }" class="btn-ghost hidden px-3 md:inline-flex">我的訂單</RouterLink>
           <span class="hidden text-sm text-ink/70 lg:inline">Hi，{{ auth.user.name }}</span>
           <button type="button" class="btn-ghost hidden px-3 md:inline-flex" @click="logout">登出</button>
@@ -83,6 +84,7 @@ function logout() {
     <nav v-show="menuOpen" id="mobile-menu" aria-label="行動版選單" class="border-t border-sand bg-cream md:hidden">
       <ul class="container-page flex flex-col py-2 text-sm">
         <li v-for="l in links" :key="l.label"><RouterLink :to="l.to" class="block py-3">{{ l.label }}</RouterLink></li>
+        <li v-if="auth.isAdmin" class="border-t border-sand"><RouterLink :to="{ name: 'admin-products' }" class="block py-3 text-accent">後台管理</RouterLink></li>
         <li v-if="auth.isLoggedIn" class="border-t border-sand"><RouterLink :to="{ name: 'orders' }" class="block py-3">我的訂單</RouterLink></li>
         <li v-if="auth.isLoggedIn" class="flex items-center justify-between border-t border-sand py-3">
           <span class="text-ink/70">Hi，{{ auth.user.name }}</span>

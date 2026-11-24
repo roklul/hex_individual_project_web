@@ -20,12 +20,15 @@
 | `/checkout` | 結帳 | 需登入；收件資料、付款方式（貨到付款／ATM 轉帳）、欄位即時驗證 |
 | `/orders` | 我的訂單 | 需登入；訂單列表、狀態標籤、分頁 |
 | `/orders/:id` | 訂單明細 | 需登入；下單完成提示、明細、取消訂單 |
+| `/admin/products` | 後台：商品管理 | 僅管理員；搜尋、分類篩選、分頁，新增／編輯／上下架／刪除商品 |
+| `/admin/orders` | 後台：訂單管理 | 僅管理員；查看所有會員訂單與收件資料、變更訂單狀態（取消會補回庫存） |
 
 ## 狀態管理重點
 
 - **auth store**：token 存於 `localStorage`，重新整理時以 `GET /auth/me` 還原登入狀態；token 失效時自動登出並導向登入頁。
 - **cart store**：每次加入/修改/移除都呼叫 API，並以**後端回傳的完整購物車覆蓋本地狀態**，確保前後端一致；操作失敗時重新抓取購物車。
 - **未登入加入購物車**：顯示提示並導向登入頁，登入/註冊後自動回到原頁面。
+- **後台權限**：導覽列只對管理員顯示「後台管理」；一般會員直接輸入 `/admin` 會被導回首頁，所有後台 API 也由後端再次檢查角色（回 403）。
 - **操作回饋**：Toast 通知、按鈕 loading、購物車徽章數字動畫。
 - **載入 / 查無結果 / API 錯誤**：骨架屏、空狀態、錯誤訊息與「重新載入」按鈕。
 
@@ -41,8 +44,11 @@ src/
 │  ├─ layout/      AppHeader、AppFooter
 │  ├─ product/     ProductCard、ProductGrid、CategoryFilter、SearchBar
 │  ├─ cart/        CartItem
+│  ├─ order/       OrderStatusBadge、CheckoutSteps
+│  ├─ admin/       ProductFormDialog
 │  └─ common/      AppPagination、QuantityStepper、StatusMessage、LoadingSpinner、ToastContainer、AuthCard
-└─ views/          Home、Products、ProductDetail、Login、Register、Cart、NotFound
+└─ views/          Home、Products、ProductDetail、Login、Register、Cart、Checkout、Orders、OrderDetail、NotFound
+   └─ admin/       AdminLayout、AdminProductsView、AdminOrdersView
 ```
 
 語意標籤：`header` / `nav` / `main` / `section` / `article` / `aside` / `footer` / `figure` / `form` / `dl` / `address`。

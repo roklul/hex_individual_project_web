@@ -26,3 +26,12 @@ export const orderApi = {
   get: (id) => http.get(`/orders/${id}`).then((r) => r.data.data),
   cancel: (id) => http.post(`/orders/${id}/cancel`).then((r) => r.data),
 }
+
+export const adminApi = {
+  listProducts: (params) => http.get('/admin/products', { params }).then((r) => r.data),
+  createProduct: (payload) => http.post('/admin/products', payload).then((r) => r.data),
+  updateProduct: (id, payload) => http.patch(`/admin/products/${id}`, payload).then((r) => r.data),
+  deleteProduct: (id) => http.delete(`/admin/products/${id}`).then((r) => r.data),
+  listOrders: (params) => http.get('/admin/orders', { params }).then((r) => r.data),
+  updateOrderStatus: (id, status) => http.patch(`/admin/orders/${id}`, { status }).then((r) => r.data),
+}
