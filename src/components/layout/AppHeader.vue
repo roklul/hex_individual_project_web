@@ -46,7 +46,7 @@ function logout() {
         <template v-if="auth.isLoggedIn">
           <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-products' }" class="btn-ghost hidden px-3 text-accent md:inline-flex">後台管理</RouterLink>
           <RouterLink :to="{ name: 'orders' }" class="btn-ghost hidden px-3 md:inline-flex">我的訂單</RouterLink>
-          <span class="hidden text-sm text-ink/70 lg:inline">Hi，{{ auth.user.name }}</span>
+          <RouterLink :to="{ name: 'account' }" class="hidden max-w-32 truncate text-sm text-ink/70 hover:text-brand md:inline" title="帳號設定">Hi，{{ auth.user.name }}</RouterLink>
           <button type="button" class="btn-ghost hidden px-3 md:inline-flex" @click="logout">登出</button>
         </template>
         <template v-else>
@@ -86,6 +86,7 @@ function logout() {
         <li v-for="l in links" :key="l.label"><RouterLink :to="l.to" class="block py-3">{{ l.label }}</RouterLink></li>
         <li v-if="auth.isAdmin" class="border-t border-sand"><RouterLink :to="{ name: 'admin-products' }" class="block py-3 text-accent">後台管理</RouterLink></li>
         <li v-if="auth.isLoggedIn" class="border-t border-sand"><RouterLink :to="{ name: 'orders' }" class="block py-3">我的訂單</RouterLink></li>
+        <li v-if="auth.isLoggedIn"><RouterLink :to="{ name: 'account' }" class="block py-3">帳號設定</RouterLink></li>
         <li v-if="auth.isLoggedIn" class="flex items-center justify-between border-t border-sand py-3">
           <span class="text-ink/70">Hi，{{ auth.user.name }}</span>
           <button type="button" class="text-accent" @click="logout">登出</button>

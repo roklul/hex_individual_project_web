@@ -42,7 +42,10 @@ async function submit() {
         <input id="login-email" v-model.trim="form.email" type="email" autocomplete="email" class="input" required />
       </div>
       <div>
-        <label for="login-password" class="mb-1 block text-sm font-medium">密碼</label>
+        <div class="mb-1 flex items-center justify-between">
+          <label for="login-password" class="text-sm font-medium">密碼</label>
+          <RouterLink :to="{ name: 'forgot-password' }" class="text-xs text-accent hover:underline">忘記密碼？</RouterLink>
+        </div>
         <input id="login-password" v-model="form.password" type="password" autocomplete="current-password" class="input" required />
       </div>
       <p v-if="error" role="alert" class="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{{ error }}</p>

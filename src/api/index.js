@@ -4,6 +4,9 @@ export const authApi = {
   register: (payload) => http.post('/auth/register', payload).then((r) => r.data.data),
   login: (payload) => http.post('/auth/login', payload).then((r) => r.data.data),
   me: () => http.get('/auth/me').then((r) => r.data.data.user),
+  forgotPassword: (email) => http.post('/auth/forgot-password', { email }).then((r) => r.data),
+  resetPassword: (payload) => http.post('/auth/reset-password', payload).then((r) => r.data.data),
+  changePassword: (payload) => http.patch('/auth/password', payload).then((r) => r.data.data),
 }
 
 export const productApi = {

@@ -63,10 +63,19 @@ export const useAuthStore = defineStore('auth', () => {
     const version = session.value.version
     setSession(await authApi.register(payload), version)
   }
+  async function resetPassword(payload) {
+    const version = session.value.version
+    setSession(await authApi.resetPassword(payload), version)
+  }
+  /** 修改密碼後後端換發新憑證：目前分頁保持登入，其他裝置的舊憑證失效 */
+  async function changePassword(payload) {
+    const version = session.value.version
+    setSession(await authApi.changePassword(payload), version)
+  }
   function clear() {
     const version = session.value.version
     if (isCurrentSession(version)) saveToken('', version)
   }
 
-  return { token, user, ready, offline, isLoggedIn, isAdmin, init, login, register, logout: clear }
+  return { token, user, ready, offline, isLoggedIn, isAdmin, init, login, register, resetPassword, changePassword, logout: clear }
 })
