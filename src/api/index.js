@@ -25,6 +25,7 @@ export const orderApi = {
   list: (params) => http.get('/orders', { params }).then((r) => r.data),
   get: (id) => http.get(`/orders/${id}`).then((r) => r.data.data),
   cancel: (id) => http.post(`/orders/${id}/cancel`).then((r) => r.data),
+  reportTransfer: (id, last5) => http.post(`/orders/${id}/transfer-report`, { last5 }).then((r) => r.data),
 }
 
 export const adminApi = {

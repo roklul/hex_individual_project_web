@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { adminApi } from '@/api'
 import { getErrorMessage } from '@/api/http'
 import { useToastStore } from '@/stores/toast'
@@ -8,8 +8,8 @@ import AppPagination from '@/components/common/AppPagination.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import StatusMessage from '@/components/common/StatusMessage.vue'
 import OrderStatusBadge from '@/components/order/OrderStatusBadge.vue'
+import { statusOptions } from '@/utils/orderStatus'
 
-const STATUSES = ['待付款', '處理中', '已出貨', '已完成', '已取消']
 const toast = useToastStore()
 const orders = ref([])
 const pagination = ref({ page: 1, totalPages: 1, total: 0 })
@@ -49,7 +49,14 @@ function toggleDetail(id) {
 async function changeStatus(order, event) {
   const status = event.target.value
   if (status === order.status) return
-  if (status === '已取消' && !confirm(`確定要取消訂單 ${order.orderNo} 嗎？\n取消後商品庫存會補回，且無法再變更狀態。`)) {
+  const reported = order.transferReport?.last5
+  const question = {
+    已取消: `確定要取消訂單 ${order.orderNo} 嗎？\n取消後商品庫存會補回，且無法再變更狀態。`,
+    處理中: order.status === '待付款'
+      && `確認訂單 ${order.orderNo} 已入帳 ${currency(order.total)}？\n${reported ? `買家回報的帳號末五碼：${reported}` : '買家尚未回報匯款末五碼。'}`,
+    已完成: `確定訂單 ${order.orderNo} 已完成？完成後就不能再變更狀態。`,
+  }[status]
+  if (question && !confirm(question)) {
     event.target.value = order.status
     return
   }
@@ -57,6 +64,8 @@ async function changeStatus(order, event) {
   try {
     const res = await adminApi.updateOrderStatus(order.id, status)
     Object.assign(order, { status: res.data.status, cancelledAt: res.data.cancelledAt, updatedAt: res.data.updatedAt })
+    await nextTick()
+    event.target.value = order.status
     toast.success(`${order.orderNo}：${res.message}`)
   } catch (err) {
     event.target.value = order.status
@@ -88,6 +97,9 @@ async function changeStatus(order, event) {
             <p class="flex flex-wrap items-center gap-2">
               <span class="font-mono text-sm font-medium">{{ o.orderNo }}</span>
               <OrderStatusBadge :status="o.status" />
+              <span v-if="o.paymentMethod === 'ATM 轉帳' && o.status === '待付款'" class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="o.transferReport?.last5 ? 'bg-sky-100 text-sky-800' : 'bg-gray-100 text-ink/60'">
+                {{ o.transferReport?.last5 ? `已回報末五碼 ${o.transferReport.last5}` : '尚未回報匯款' }}
+              </span>
             </p>
             <p class="mt-1 text-xs text-ink/60">
               {{ fmtTime(o.createdAt) }}・{{ o.user?.name || '（帳號已刪除）' }}<template v-if="o.user?.email"> &lt;{{ o.user.email }}&gt;</template>
@@ -103,10 +115,10 @@ async function changeStatus(order, event) {
               :id="`ao-status-${o.id}`"
               :value="o.status"
               class="input py-1.5"
-              :disabled="o.status === '已取消' || busyId === o.id"
+              :disabled="statusOptions(o.status).length === 1 || busyId === o.id"
               @change="changeStatus(o, $event)"
             >
-              <option v-for="s in STATUSES" :key="s" :value="s">{{ s }}</option>
+              <option v-for="s in statusOptions(o.status)" :key="s" :value="s">{{ s === o.status ? s : `→ ${s}` }}</option>
             </select>
             <button type="button" class="btn-ghost shrink-0 px-3 py-1.5" :aria-expanded="expanded.has(o.id)" :aria-controls="`ao-detail-${o.id}`" @click="toggleDetail(o.id)">
               {{ expanded.has(o.id) ? '收合' : '明細' }}
@@ -131,6 +143,7 @@ async function changeStatus(order, event) {
               <dt class="text-ink/60">電話</dt><dd>{{ o.recipient.phone }}</dd>
               <dt class="text-ink/60">地址</dt><dd class="break-words">{{ o.recipient.address }}</dd>
               <template v-if="o.note"><dt class="text-ink/60">備註</dt><dd class="whitespace-pre-line break-words">{{ o.note }}</dd></template>
+              <template v-if="o.transferReport?.last5"><dt class="text-ink/60">匯款回報</dt><dd>末五碼 <span class="font-mono">{{ o.transferReport.last5 }}</span>・{{ fmtTime(o.transferReport.reportedAt) }}</dd></template>
               <template v-if="o.cancelledAt"><dt class="text-ink/60">取消時間</dt><dd>{{ fmtTime(o.cancelledAt) }}</dd></template>
             </dl>
             <dl class="space-y-1 border-t border-sand pt-3">

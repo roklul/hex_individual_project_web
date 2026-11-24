@@ -9,6 +9,7 @@ import CheckoutSteps from '@/components/order/CheckoutSteps.vue'
 import OrderStatusBadge from '@/components/order/OrderStatusBadge.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import StatusMessage from '@/components/common/StatusMessage.vue'
+import AtmTransferPanel from '@/components/order/AtmTransferPanel.vue'
 
 const route = useRoute()
 const toast = useToastStore()
@@ -20,6 +21,8 @@ const cancelling = ref(false)
 
 const justPlaced = computed(() => route.query.success === '1')
 const canCancel = computed(() => ['待付款', '處理中'].includes(order.value?.status))
+const showAtm = computed(() => order.value?.paymentMethod === 'ATM 轉帳' && (order.value.status === '待付款' || order.value.transferReport?.last5))
+const onAtmUpdated = (o) => (o ? (order.value = o) : load())
 const formatDate = (d) => new Date(d).toLocaleString('zh-TW', { hour12: false })
 
 async function load() {
@@ -71,7 +74,7 @@ async function cancel() {
           <h1 id="done-title" class="mt-2 text-2xl font-bold">訂單已成立，感謝你的購買！</h1>
           <p class="mt-2 text-cream/80">訂單編號 <strong class="text-cream">{{ order.orderNo }}</strong></p>
           <p v-if="order.paymentMethod === 'ATM 轉帳'" class="mt-3 text-sm text-cream/80">
-            請於 3 日內完成轉帳 {{ currency(order.total) }}，我們確認入帳後會盡快出貨。（作品展示用，不會實際收款）
+            請依「ATM 轉帳資訊」於期限內轉帳 {{ currency(order.total) }}，完成後回報帳號末五碼，我們確認入帳後會盡快出貨。
           </p>
           <p v-else class="mt-3 text-sm text-cream/80">我們會盡快為你出貨，商品送達時再付款即可。</p>
         </section>
@@ -104,6 +107,7 @@ async function cancel() {
         </section>
 
         <aside class="space-y-6">
+          <AtmTransferPanel v-if="showAtm" :order="order" @updated="onAtmUpdated" />
           <section class="rounded-2xl bg-white p-6 text-sm ring-1 ring-sand" aria-labelledby="od-info">
             <h2 id="od-info" class="font-medium">訂單資訊</h2>
             <dl class="mt-3 space-y-2">
