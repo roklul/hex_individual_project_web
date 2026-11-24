@@ -37,10 +37,12 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   await auth.init()
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
+    // 已登入但伺服器暫時連不上：留在原頁顯示連線錯誤，而不是誤導向登入頁
+    if (auth.token && auth.offline) return true
     return { name: 'login', query: { redirect: to.fullPath } }
   }
   // 非管理員進入後台一律回首頁；真正的權限仍由後端 API 檢查
-  if (to.meta.requiresAdmin && !auth.isAdmin) return { name: 'home' }
+  if (to.meta.requiresAdmin && !auth.isAdmin && !auth.offline) return { name: 'home' }
   if (to.meta.guestOnly && auth.isLoggedIn) return { name: 'home' }
 })
 

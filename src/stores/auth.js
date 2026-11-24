@@ -7,6 +7,8 @@ export const useAuthStore = defineStore('auth', () => {
   const token = computed(() => session.value.token)
   const user = ref(null)
   const ready = ref(false)
+  // 有 token 但暫時連不上伺服器（例如免費主機冷啟動逾時）：保留登入，不要誤導向登入頁
+  const offline = ref(false)
   let initPromise = null
 
   const isLoggedIn = computed(() => !!token.value && !!user.value)
@@ -14,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   watch(session, () => {
     user.value = null
+    offline.value = false
     ready.value = !session.value.token
     initPromise = null
   }, { flush: 'sync' })
@@ -33,12 +36,18 @@ export const useAuthStore = defineStore('auth', () => {
       if (token.value && !user.value) {
         try {
           const profile = await authApi.me()
-          if (isCurrentSession(version)) user.value = profile
+          if (isCurrentSession(version)) {
+            user.value = profile
+            offline.value = false
+          }
         } catch (err) {
           if (!isCurrentSession(version)) return
           // 只有確定 token 無效時才清掉；網路錯誤時保留，下次再試
           if (err.response?.status === 401) clear()
-          else initPromise = null
+          else {
+            offline.value = true
+            initPromise = null
+          }
         }
       }
       if (isCurrentSession(version)) ready.value = true
@@ -59,5 +68,5 @@ export const useAuthStore = defineStore('auth', () => {
     if (isCurrentSession(version)) saveToken('', version)
   }
 
-  return { token, user, ready, isLoggedIn, isAdmin, init, login, register, logout: clear }
+  return { token, user, ready, offline, isLoggedIn, isAdmin, init, login, register, logout: clear }
 })

@@ -51,7 +51,7 @@ function checkout() {
     </StatusMessage>
 
     <div v-else class="mt-8 grid gap-8 lg:grid-cols-3">
-      <section class="rounded-2xl bg-white px-4 ring-1 ring-sand sm:px-6 lg:col-span-2" aria-label="購物車商品">
+      <section class="min-w-0 rounded-2xl bg-white px-4 ring-1 ring-sand sm:px-6 lg:col-span-2" aria-label="購物車商品">
         <header class="flex items-center justify-between border-b border-sand py-4">
           <h2 class="font-medium">共 {{ cart.count }} 件商品</h2>
           <button type="button" class="text-sm text-ink/50 hover:text-red-700" :disabled="cart.isPending('__all__')" @click="clearAll">清空購物車</button>

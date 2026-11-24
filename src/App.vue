@@ -1,5 +1,7 @@
 <script setup>
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import StatusMessage from '@/components/common/StatusMessage.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import ToastContainer from '@/components/common/ToastContainer.vue'
@@ -9,6 +11,17 @@ import { session } from '@/api/session'
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const route = useRoute()
+const router = useRouter()
+const retrying = ref(false)
+
+async function retryConnection() {
+  retrying.value = true
+  await auth.init()
+  retrying.value = false
+  // 連上後發現登入已失效：改導向登入頁；仍連不上則繼續顯示錯誤
+  if (!auth.isLoggedIn && !auth.offline) router.replace({ name: 'login', query: { redirect: route.fullPath } })
+}
 
 // 登入完成後取得該會員的購物車
 watch(
@@ -27,6 +40,11 @@ watch(
     <AppHeader />
     <main id="main" class="flex-1">
       <RouterView v-if="!$route.meta.requiresAuth || auth.isLoggedIn" :key="$route.meta.requiresAuth ? session.version : undefined" />
+      <div v-else-if="auth.offline" class="container-page py-12">
+        <StatusMessage type="error" title="暫時連不上伺服器" description="伺服器可能正在啟動，請稍候幾秒再試。你的登入狀態仍保留著。">
+          <button type="button" class="btn-primary" :disabled="retrying" @click="retryConnection">{{ retrying ? '連線中…' : '重新連線' }}</button>
+        </StatusMessage>
+      </div>
     </main>
     <AppFooter />
     <ToastContainer />
